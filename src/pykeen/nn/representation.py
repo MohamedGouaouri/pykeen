@@ -139,8 +139,10 @@ class Representation(nn.Module, ExtraReprMixin, ABC):
         super().__init__()
         self.max_id = max_id
         self.shape = tuple(upgrade_to_sequence(shape))
-        self.normalizer = normalizer_resolver.make_safe(normalizer, normalizer_kwargs)
-        self.regularizer = regularizer_resolver.make_safe(regularizer, regularizer_kwargs)
+        self.normalizer = normalizer_resolver.make_safe(
+            normalizer, normalizer_kwargs)
+        self.regularizer = regularizer_resolver.make_safe(
+            regularizer, regularizer_kwargs)
         self.dropout = None if dropout is None else nn.Dropout(dropout)
         if unique is None:
             # heuristic
@@ -249,7 +251,8 @@ class SubsetRepresentation(Representation):
                 f"Base representations comprise only {base.max_id} representations, "
                 f"but at least {max_id} are required.",
             )
-        super().__init__(max_id=max_id, shape=ShapeError.verify(shape=base.shape, reference=shape), **kwargs)
+        super().__init__(max_id=max_id, shape=ShapeError.verify(
+            shape=base.shape, reference=shape), **kwargs)
         self.base = base
 
     # docstr-coverage: inherited
@@ -388,9 +391,12 @@ class Embedding(Representation):
 
         # use make for initializer since there's a default, and make_safe
         # for the others to pass through None values
-        self.initializer = initializer_resolver.make(initializer, initializer_kwargs)
-        self.constrainer = constrainer_resolver.make_safe(constrainer, constrainer_kwargs)
-        self._embeddings = torch.nn.Embedding(num_embeddings=max_id, embedding_dim=_embedding_dim, dtype=dtype)
+        self.initializer = initializer_resolver.make(
+            initializer, initializer_kwargs)
+        self.constrainer = constrainer_resolver.make_safe(
+            constrainer, constrainer_kwargs)
+        self._embeddings = torch.nn.Embedding(
+            num_embeddings=max_id, embedding_dim=_embedding_dim, dtype=dtype)
         self._embeddings.requires_grad_(trainable)
 
     # docstr-coverage: inherited
@@ -409,7 +415,8 @@ class Embedding(Representation):
             # fixme: work-around until nn.Embedding supports complex
             if self.is_complex:
                 x = torch.view_as_real(x)
-            self._embeddings.weight.data = x.view(*self._embeddings.weight.data.shape)
+            self._embeddings.weight.data = x.view(
+                *self._embeddings.weight.data.shape)
 
     # docstr-coverage: inherited
     def _plain_forward(
@@ -555,14 +562,16 @@ def process_max_id(max_id: Optional[int], num_embeddings: Optional[int]) -> int:
     if max_id is None:
         if num_embeddings is None:
             raise ValueError("Must provide max_id")
-        warnings.warn("prefer using 'max_id' over 'num_embeddings'", DeprecationWarning)
+        warnings.warn(
+            "prefer using 'max_id' over 'num_embeddings'", DeprecationWarning)
         max_id = num_embeddings
     elif num_embeddings is not None and num_embeddings != max_id:
         raise ValueError("Cannot provide both, 'max_id' over 'num_embeddings'")
     return max_id
 
 
-constrainer_resolver = FunctionResolver([functional.normalize, complex_normalize, torch.clamp, clamp_norm])
+constrainer_resolver = FunctionResolver(
+    [functional.normalize, complex_normalize, torch.clamp, clamp_norm])
 
 normalizer_resolver = FunctionResolver([functional.normalize])
 
@@ -630,7 +639,8 @@ class CompGCNLayer(nn.Module):
         self.w_bwd = nn.Parameter(data=torch.empty(input_dim, output_dim))
 
         # linear relation transformation
-        self.w_rel = nn.Linear(in_features=input_dim, out_features=output_dim, bias=use_relation_bias)
+        self.w_rel = nn.Linear(in_features=input_dim,
+                               out_features=output_dim, bias=use_relation_bias)
 
         # layer-specific self-loop relation representation
         self.self_loop = nn.Parameter(data=torch.empty(1, input_dim))
@@ -639,7 +649,8 @@ class CompGCNLayer(nn.Module):
         self.drop = nn.Dropout(dropout)
         self.bn = nn.BatchNorm1d(output_dim)
         self.bias = Bias(output_dim) if use_bias else None
-        self.activation = activation_resolver.make(query=activation, pos_kwargs=activation_kwargs)
+        self.activation = activation_resolver.make(
+            query=activation, pos_kwargs=activation_kwargs)
 
         # initialize
         self.reset_parameters()
@@ -691,10 +702,12 @@ class CompGCNLayer(nn.Module):
         m = m @ weight
 
         # normalization
-        m = self.edge_weighting(source=source, target=target, message=m, x_e=x_e)
+        m = self.edge_weighting(
+            source=source, target=target, message=m, x_e=x_e)
 
         # aggregate by sum
-        x_e = x_e.new_zeros(x_e.shape[0], m.shape[1]).index_add(dim=0, index=target, source=m)
+        x_e = x_e.new_zeros(x_e.shape[0], m.shape[1]).index_add(
+            dim=0, index=target, source=m)
 
         # dropout
         x_e = self.drop(x_e)
@@ -735,8 +748,10 @@ class CompGCNLayer(nn.Module):
         # update entity representations: mean over self-loops / forward edges / backward edges
         x_e = (
             self.composition(x_e, self.self_loop) @ self.w_loop
-            + self.message(x_e=x_e, x_r=x_r, edge_index=edge_index, edge_type=edge_type, weight=self.w_fwd)
-            + self.message(x_e=x_e, x_r=x_r, edge_index=edge_index.flip(0), edge_type=edge_type + 1, weight=self.w_bwd)
+            + self.message(x_e=x_e, x_r=x_r, edge_index=edge_index,
+                           edge_type=edge_type, weight=self.w_fwd)
+            + self.message(x_e=x_e, x_r=x_r, edge_index=edge_index.flip(0),
+                           edge_type=edge_type + 1, weight=self.w_bwd)
         ) / 3
 
         if self.bias:
@@ -775,7 +790,8 @@ class CombinedCompGCNRepresentations(nn.Module):
     """A sequence of CompGCN layers."""
 
     # Buffered enriched entity and relation representations
-    enriched_representations: Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]
+    enriched_representations: Optional[Tuple[torch.FloatTensor,
+                                             torch.FloatTensor]]
 
     def __init__(
         self,
@@ -828,7 +844,8 @@ class CombinedCompGCNRepresentations(nn.Module):
             representation_kwargs=relation_representations_kwargs,
         )
         if len(self.entity_representations.shape) > 1:
-            raise ValueError(f"{self.__class__.__name__} requires vector base entity representations.")
+            raise ValueError(
+                f"{self.__class__.__name__} requires vector base entity representations.")
         input_dim = self.entity_representations.shape[0]
         # TODO: might not be true for all compositions
         if self.relation_representations.shape != self.entity_representations.shape:
@@ -864,8 +881,10 @@ class CombinedCompGCNRepresentations(nn.Module):
 
         # register buffers for adjacency matrix; we use the same format as PyTorch Geometric
         # TODO: This always uses all training triples for message passing
-        self.register_buffer(name="edge_index", tensor=get_edge_index(triples_factory=triples_factory))
-        self.register_buffer(name="edge_type", tensor=triples_factory.mapped_triples[:, 1])
+        self.register_buffer(name="edge_index", tensor=get_edge_index(
+            triples_factory=triples_factory))
+        self.register_buffer(
+            name="edge_type", tensor=triples_factory.mapped_triples[:, 1])
 
         # initialize buffer of enriched representations
         self.enriched_representations = None
@@ -893,7 +912,8 @@ class CombinedCompGCNRepresentations(nn.Module):
             x_r = self.relation_representations()
             # enrich
             for layer in self.layers:
-                x_e, x_r = layer(x_e=x_e, x_r=x_r, edge_index=self.edge_index, edge_type=self.edge_type)
+                x_e, x_r = layer(
+                    x_e=x_e, x_r=x_r, edge_index=self.edge_index, edge_type=self.edge_type)
             self.enriched_representations = (x_e, x_r)
         return self.enriched_representations
 
@@ -936,7 +956,8 @@ class SingleCompGCNRepresentation(Representation):
             shape_ = (combined.output_dim,)
         else:
             raise ValueError
-        super().__init__(max_id=max_id, shape=ShapeError.verify(shape=shape_, reference=shape), **kwargs)
+        super().__init__(max_id=max_id, shape=ShapeError.verify(
+            shape=shape_, reference=shape), **kwargs)
         self.combined = combined
         self.position = position
         self.reset_parameters()
@@ -1011,9 +1032,11 @@ class TextRepresentation(Representation):
         # check max_id
         max_id = max_id or len(labels)
         if max_id != len(labels):
-            raise ValueError(f"max_id={max_id} does not match len(labels)={len(labels)}")
+            raise ValueError(
+                f"max_id={max_id} does not match len(labels)={len(labels)}")
         # infer shape
-        shape = ShapeError.verify(shape=encoder.encode_all(labels[0:1]).shape[1:], reference=shape)
+        shape = ShapeError.verify(shape=encoder.encode_all(
+            labels[0:1]).shape[1:], reference=shape)
         super().__init__(max_id=max_id, shape=shape, **kwargs)
         self.labels = labels
         # assign after super, since they should be properly registered as submodules
@@ -1063,7 +1086,8 @@ class TextRepresentation(Representation):
             if the dataset's triples factory does not provide labels
         """
         if not isinstance(dataset.training, TriplesFactory):
-            raise TypeError(f"{cls.__name__} requires access to labels, but dataset.training does not provide such.")
+            raise TypeError(
+                f"{cls.__name__} requires access to labels, but dataset.training does not provide such.")
         return cls.from_triples_factory(triples_factory=dataset.training, **kwargs)
 
     # docstr-coverage: inherited
@@ -1119,27 +1143,36 @@ class CombinedRepresentation(Representation):
         :raises ValueError:
             if the `max_id` of the base representations does not match
         """
+        print("BASE KWARGS", base_kwargs)
+        print("KWARGS", kwargs)
+
         # input normalization
-        combination = combination_resolver.make(combination, combination_kwargs)
+        combination = combination_resolver.make(
+            combination, combination_kwargs)
 
         # has to be imported here to avoid cyclic import
         from . import representation_resolver
 
         # create base representations
-        base = representation_resolver.make_many(base, kwargs=base_kwargs, max_id=max_id)
+        base = representation_resolver.make_many(
+            base, kwargs=base_kwargs, max_id=max_id)
 
         # verify same ID range
         max_ids = sorted(set(b.max_id for b in base))
         if len(max_ids) != 1:
             # note: we could also relax the requiremen, and set max_id = min(max_ids)
-            raise ValueError(f"Maximum number of Ids does not match! {max_ids}")
+            raise ValueError(
+                f"Maximum number of Ids does not match! {max_ids}")
         max_id = max_id or max_ids[0]
         if max_id != max_ids[0]:
-            raise ValueError(f"max_id={max_id} does not match base max_id={max_ids[0]}")
+            raise ValueError(
+                f"max_id={max_id} does not match base max_id={max_ids[0]}")
 
         # shape inference
-        shape = ShapeError.verify(shape=combination.output_shape(input_shapes=[b.shape for b in base]), reference=shape)
-        super().__init__(max_id=max_id, shape=shape, unique=any(b.unique for b in base), **kwargs)
+        shape = ShapeError.verify(shape=combination.output_shape(
+            input_shapes=[b.shape for b in base]), reference=shape)
+        super().__init__(max_id=max_id, shape=shape,
+                         unique=any(b.unique for b in base), **kwargs)
 
         # assign base representations *after* super init
         self.base = nn.ModuleList(base)
@@ -1215,7 +1248,8 @@ class WikidataTextRepresentation(TextRepresentation):
         titles = cache.get_labels(ids=labels)
         descriptions = cache.get_descriptions(ids=labels)
         # compose labels
-        labels = [f"{title}: {description}" for title, description in zip(titles, descriptions)]
+        labels = [f"{title}: {description}" for title,
+                  description in zip(titles, descriptions)]
         # delegate to super class
         super().__init__(labels=labels, **kwargs)
 
@@ -1319,7 +1353,8 @@ class PartitionRepresentation(Representation):
             raise ValueError("Must provide at least one base representation")
         # while possible, this might be unintended
         if len(bases) == 1:
-            logger.warning(f"Encountered only a single base representation: {bases[0]}")
+            logger.warning(
+                f"Encountered only a single base representation: {bases[0]}")
 
         # extract shape
         shapes = [base.shape for base in bases]
@@ -1328,15 +1363,18 @@ class PartitionRepresentation(Representation):
         shape = ShapeError.verify(shape=shapes[0], reference=shape)
 
         # check for invalid base ids
-        unknown_base_ids = set(assignment[:, 0].tolist()).difference(range(len(bases)))
+        unknown_base_ids = set(
+            assignment[:, 0].tolist()).difference(range(len(bases)))
         if unknown_base_ids:
-            raise ValueError(f"Invalid representation Ids in assignment: {unknown_base_ids}")
+            raise ValueError(
+                f"Invalid representation Ids in assignment: {unknown_base_ids}")
 
         # check for invalid local indices
         for i, base in enumerate(bases):
             max_index = assignment[assignment[:, 0] == i, 1].max().item()
             if max_index >= base.max_id:
-                raise ValueError(f"base {base} (index:{i}) cannot provide indices up to {max_index}")
+                raise ValueError(
+                    f"base {base} (index:{i}) cannot provide indices up to {max_index}")
 
         super().__init__(max_id=assignment.shape[0], shape=shape, **kwargs)
 
@@ -1445,14 +1483,16 @@ class BackfillRepresentation(PartitionRepresentation):
         from . import representation_resolver
 
         base_ids = sorted(set(base_ids))
-        base = representation_resolver.make(base, base_kwargs, max_id=len(base_ids))
+        base = representation_resolver.make(
+            base, base_kwargs, max_id=len(base_ids))
         # comment: not all representations support passing a shape parameter
         backfill = representation_resolver.make(
             backfill, backfill_kwargs, max_id=max_id - base.max_id, shape=base.shape
         )
 
         # create assignment
-        assignment = torch.full(size=(max_id, 2), fill_value=1, dtype=torch.long)
+        assignment = torch.full(
+            size=(max_id, 2), fill_value=1, dtype=torch.long)
         # base
         assignment[base_ids, 0] = 0
         assignment[base_ids, 1] = torch.arange(base.max_id)
@@ -1462,7 +1502,8 @@ class BackfillRepresentation(PartitionRepresentation):
         assignment[mask, 0] = 1
         assignment[mask, 1] = torch.arange(backfill.max_id)
 
-        super().__init__(assignment=assignment, bases=[base, backfill], **kwargs)
+        super().__init__(assignment=assignment,
+                         bases=[base, backfill], **kwargs)
 
 
 class TransformedRepresentation(Representation):
@@ -1538,14 +1579,16 @@ class TransformedRepresentation(Representation):
         # infer shape
         shape = ShapeError.verify(
             shape=self._help_forward(
-                base=base, transformation=transformation, indices=torch.zeros(1, dtype=torch.long, device=base.device)
+                base=base, transformation=transformation, indices=torch.zeros(
+                    1, dtype=torch.long, device=base.device)
             ).shape[1:],
             reference=shape,
         )
         # infer max_id
         max_id = max_id or base.max_id
         if max_id != base.max_id:
-            raise ValueError(f"Incompatible max_id={max_id} vs. base.max_id={base.max_id}")
+            raise ValueError(
+                f"Incompatible max_id={max_id} vs. base.max_id={base.max_id}")
 
         super().__init__(max_id=max_id, shape=shape, **kwargs)
         self.transformation = transformation
@@ -1698,7 +1741,8 @@ class TensorTrainRepresentation(Representation):
 
             terms.append(term)
             shapes.append(shape)
-        eq = " ".join((", ".join("".join(term) for term in terms), "->", "".join(out_term)))
+        eq = " ".join((", ".join("".join(term)
+                      for term in terms), "->", "".join(out_term)))
         return eq, [tuple(shape) for shape in shapes]
 
     @staticmethod
@@ -1750,7 +1794,8 @@ class TensorTrainRepresentation(Representation):
             if any of the conditions is violated
         """
         if len(ms) != num_cores or len(ns) != num_cores:
-            raise ValueError(f"Invalid length: len(ms)={len(ms)}, len(ns)={len(ns)} vs. num_cores={num_cores}")
+            raise ValueError(
+                f"Invalid length: len(ms)={len(ms)}, len(ns)={len(ns)} vs. num_cores={num_cores}")
 
         m_prod = numpy.prod(ms).item()
         if m_prod < max_id:
@@ -1798,17 +1843,22 @@ class TensorTrainRepresentation(Representation):
         if len(ranks) == 1:
             ranks = ranks * (num_cores - 1)
         if len(ranks) != num_cores - 1:
-            raise ValueError(f"Inconsistent number of ranks {len(ranks)} for num_cores={num_cores}")
+            raise ValueError(
+                f"Inconsistent number of ranks {len(ranks)} for num_cores={num_cores}")
 
         # determine M_k, N_k
         # TODO: allow to pass them from outside?
-        ms, ns = self.factor_sizes(max_id=self.max_id, shape=self.shape, num_cores=num_cores)
-        self.check_factors(ms, ns, max_id=self.max_id, shape=self.shape, num_cores=num_cores)
+        ms, ns = self.factor_sizes(
+            max_id=self.max_id, shape=self.shape, num_cores=num_cores)
+        self.check_factors(ms, ns, max_id=self.max_id,
+                           shape=self.shape, num_cores=num_cores)
 
         # normalize assignment
         if assignment is None:
-            assignment = self.create_default_assignment(max_id=self.max_id, num_cores=num_cores, ms=ms)
-        self.check_assignment(assignment=assignment, max_id=self.max_id, num_cores=num_cores, ms=ms)
+            assignment = self.create_default_assignment(
+                max_id=self.max_id, num_cores=num_cores, ms=ms)
+        self.check_assignment(assignment=assignment,
+                              max_id=self.max_id, num_cores=num_cores, ms=ms)
         self.register_buffer(name="assignment", tensor=assignment)
 
         # determine shapes and einsum equation
@@ -1816,7 +1866,8 @@ class TensorTrainRepresentation(Representation):
 
         # create base representations
         self.bases = nn.ModuleList(
-            representation_resolver.make(base, base_kwargs, max_id=m_i, shape=shape)
+            representation_resolver.make(
+                base, base_kwargs, max_id=m_i, shape=shape)
             for base, base_kwargs, m_i, shape in zip(*broadcast_upgrade_to_sequences(bases, bases_kwargs, ms, shapes))
         )
 
