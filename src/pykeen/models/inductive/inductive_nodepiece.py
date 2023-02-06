@@ -4,6 +4,7 @@
 
 import logging
 from typing import Any, Callable, ClassVar, Mapping, Optional
+from ...typing import Initializer
 
 import torch
 from class_resolver import Hint, HintOrType, OptionalKwargs
@@ -59,7 +60,7 @@ class InductiveNodePiece(InductiveERModel):
         aggregation: Hint[Callable[[torch.Tensor, int], torch.Tensor]] = None,
         validation_factory: Optional[CoreTriplesFactory] = None,
         test_factory: Optional[CoreTriplesFactory] = None,
-        initializer=xavier_uniform_,
+        entity_initializer: Hint[Initializer] = xavier_uniform_,
         **kwargs,
     ) -> None:
         """
@@ -129,7 +130,7 @@ class InductiveNodePiece(InductiveERModel):
                 aggregation=aggregation,
                 num_tokens=num_tokens,
                 # Modification here
-                initializer=initializer
+                initializer=entity_initializer
             ),
             relation_representations=SubsetRepresentation(  # hide padding relation
                 max_id=triples_factory.num_relations,
