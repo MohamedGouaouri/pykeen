@@ -201,7 +201,7 @@ def _prepare_representation_module_list(
     print("KWARGS", representations_kwargs)
     print("REPRESENTATION", representations)
     rs = representation_resolver.make_many(
-        representations, kwargs=representations_kwargs, max_id=max_id)
+        representations, kwargs=representations_kwargs, max_id=max_id, initializer=representations_kwargs.get('initializer'))
     print("RS", rs)
 
     # check max-id
