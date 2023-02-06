@@ -198,9 +198,12 @@ def _prepare_representation_module_list(
     """
     # TODO: allow max_id being present in representation_kwargs; if it matches max_id
     # TODO: we could infer some shapes from the given interaction shape information
+    print("KWARGS", representations_kwargs)
+    print("REPRESENTATION", representations)
     rs = representation_resolver.make_many(
         representations, kwargs=representations_kwargs, max_id=max_id)
     print("RS", rs)
+
     # check max-id
     for r in rs:
         if r.max_id < max_id:
@@ -332,6 +335,7 @@ class ERModel(
         super().__init__(triples_factory=triples_factory, **kwargs)
         self.interaction = interaction_resolver.make(
             interaction, pos_kwargs=interaction_kwargs)
+
         self.entity_representations = self._build_representations(
             triples_factory=triples_factory,
             representations=entity_representations,
