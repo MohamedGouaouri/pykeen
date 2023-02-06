@@ -1143,8 +1143,8 @@ class CombinedRepresentation(Representation):
         :raises ValueError:
             if the `max_id` of the base representations does not match
         """
-        print("BASE KWARGS", base_kwargs)
-        print("KWARGS", kwargs)
+        print("BASE KWARGS")
+        print("KWARGS")
 
         # input normalization
         combination = combination_resolver.make(
