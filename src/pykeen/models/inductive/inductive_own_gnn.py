@@ -8,7 +8,7 @@ from typing import Iterable, Optional, Tuple, cast
 import torch
 from torch import nn
 
-from .inductive_own_gnn import InductiveOwn
+from .inductive_own import InductiveOwn
 from ...nn.representation import CompGCNLayer
 from ...typing import HeadRepresentation, InductiveMode, RelationRepresentation, TailRepresentation
 from ...utils import get_edge_index

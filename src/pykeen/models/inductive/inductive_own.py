@@ -6,7 +6,6 @@ import logging
 from typing import Any, ClassVar, Mapping, Optional
 from ...typing import Initializer
 
-import torch
 from class_resolver import Hint, HintOrType
 
 from .base import InductiveERModel
