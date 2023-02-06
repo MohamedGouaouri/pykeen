@@ -3,23 +3,20 @@
 """A wrapper which combines an interaction function with NodePiece entity representations."""
 
 import logging
-from typing import Any, Callable, ClassVar, Mapping, Optional
+from typing import Any, ClassVar, Mapping, Optional
 from ...typing import Initializer
 
 import torch
-from class_resolver import Hint, HintOrType, OptionalKwargs
+from class_resolver import Hint, HintOrType
 
 from .base import InductiveERModel
 from ...constants import DEFAULT_EMBEDDING_HPO_EMBEDDING_DIM_RANGE
 from ...nn import (
     DistMultInteraction,
     Interaction,
-    NodePieceRepresentation,
-    SubsetRepresentation,
-    representation_resolver,
 )
-from ...nn.node_piece import RelationTokenizer
-from ...nn.init import xavier_uniform_
+
+from ...nn.init import xavier_uniform_, xavier_normal_norm_
 from ...triples.triples_factory import CoreTriplesFactory
 
 __all__ = [
@@ -45,6 +42,7 @@ class InductiveOwn(InductiveERModel):
         validation_factory: Optional[CoreTriplesFactory] = None,
         test_factory: Optional[CoreTriplesFactory] = None,
         entity_initializer: Hint[Initializer] = xavier_uniform_,
+        relation_initializer: Hint[Initializer] = xavier_normal_norm_,
         **kwargs,
     ) -> None:
         """
@@ -89,6 +87,11 @@ class InductiveOwn(InductiveERModel):
                 # triples_factory=triples_factory,
                 # Modification here
                 initializer=entity_initializer
+            ),
+            relation_representations_kwargs=dict(
+                shape=embedding_dim,
+                initializer=relation_initializer,
+
             ),
             validation_factory=validation_factory,
             testing_factory=test_factory,
