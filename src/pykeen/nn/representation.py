@@ -1169,9 +1169,9 @@ class CombinedRepresentation(Representation):
                 f"max_id={max_id} does not match base max_id={max_ids[0]}")
 
         # shape inference
-        shape = ShapeError.verify(shape=combination.output_shape(
-            input_shapes=[b.shape for b in base]), reference=shape)
-        super().__init__(max_id=max_id, shape=shape,
+        # shape = ShapeError.verify(shape=combination.output_shape(
+        #     input_shapes=[b.shape for b in base]), reference=shape)
+        super().__init__(max_id=max_id,
                          unique=any(b.unique for b in base), **kwargs)
 
         # assign base representations *after* super init
