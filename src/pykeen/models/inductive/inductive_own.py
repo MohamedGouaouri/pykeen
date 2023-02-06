@@ -20,7 +20,7 @@ from ...nn.init import xavier_uniform_, xavier_normal_norm_
 from ...triples.triples_factory import CoreTriplesFactory
 
 __all__ = [
-    "InductiveNodePiece",
+    "InductiveOwn",
 ]
 
 logger = logging.getLogger(__name__)
