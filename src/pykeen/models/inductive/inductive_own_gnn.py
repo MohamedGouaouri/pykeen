@@ -8,19 +8,19 @@ from typing import Iterable, Optional, Tuple, cast
 import torch
 from torch import nn
 
-from .inductive_nodepiece import InductiveNodePiece
+from .inductive_own_gnn import InductiveOwn
 from ...nn.representation import CompGCNLayer
 from ...typing import HeadRepresentation, InductiveMode, RelationRepresentation, TailRepresentation
 from ...utils import get_edge_index
 
 __all__ = [
-    "InductiveNodePieceGNN",
+    "InductiveOwnGNN",
 ]
 
 logger = logging.getLogger(__name__)
 
 
-class InductiveOwnGNN(InductiveNodePiece):
+class InductiveOwnGNN(InductiveOwn):
 
     def __init__(
         self,
