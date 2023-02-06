@@ -77,7 +77,8 @@ class TokenizationRepresentation(Representation):
             else assignment.max().item() + 2  # exclusive (+1) and including padding (+1)
         )
 
-        assignment[padding] = self.vocabulary_size - 1  # = assignment.max().item() + 1
+        assignment[padding] = self.vocabulary_size - \
+            1  # = assignment.max().item() + 1
         max_id, num_chosen_tokens = assignment.shape
 
         # resolve token representation
@@ -86,7 +87,8 @@ class TokenizationRepresentation(Representation):
             token_representation_kwargs,
             max_id=self.vocabulary_size,
         )
-        shape = ShapeError.verify(shape=(num_chosen_tokens,) + token_representation.shape, reference=shape)
+        shape = ShapeError.verify(
+            shape=(num_chosen_tokens,) + token_representation.shape, reference=shape)
         super().__init__(max_id=max_id, shape=shape, **kwargs)
 
         # input validation
@@ -186,7 +188,8 @@ class TokenizationRepresentation(Representation):
         """
         output_path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(self.assignment, output_path)
-        logger.info(f"Saved assignment of shape {self.assignment.shape} to {output_path}")
+        logger.info(
+            f"Saved assignment of shape {self.assignment.shape} to {output_path}")
 
 
 class HashDiversityInfo(NamedTuple):
@@ -227,6 +230,7 @@ class NodePieceRepresentation(CombinedRepresentation):
         num_tokens: OneOrSequence[int] = 2,
         aggregation: Union[None, str, Callable[[torch.FloatTensor, int], torch.FloatTensor]] = None,
         max_id: Optional[int] = None,
+        initializer: None,
         **kwargs,
     ):
         """
@@ -268,7 +272,8 @@ class NodePieceRepresentation(CombinedRepresentation):
         mapped_triples = triples_factory.mapped_triples
         if triples_factory.create_inverse_triples:
             # inverse triples are created afterwards implicitly
-            mapped_triples = mapped_triples[mapped_triples[:, 1] < triples_factory.real_num_relations]
+            mapped_triples = mapped_triples[mapped_triples[:, 1]
+                                            < triples_factory.real_num_relations]
 
         token_representations, token_representations_kwargs, num_tokens = broadcast_upgrade_to_sequences(
             token_representations, token_representations_kwargs, num_tokens
@@ -286,7 +291,8 @@ class NodePieceRepresentation(CombinedRepresentation):
                 num_relations=triples_factory.real_num_relations,
             )
             for tokenizer_inst, token_representation, token_representation_kwargs, num_tokens_ in zip(
-                tokenizer_resolver.make_many(queries=tokenizers, kwargs=tokenizers_kwargs),
+                tokenizer_resolver.make_many(
+                    queries=tokenizers, kwargs=tokenizers_kwargs),
                 token_representations,
                 token_representations_kwargs,
                 num_tokens,
@@ -306,7 +312,8 @@ class NodePieceRepresentation(CombinedRepresentation):
             max_id=triples_factory.num_entities,
             base=token_representations,
             combination=ConcatAggregationCombination,
-            combination_kwargs=dict(aggregation=aggregation, dim=-len(token_representations[0].shape)),
+            combination_kwargs=dict(
+                aggregation=aggregation, dim=-len(token_representations[0].shape)),
             **kwargs,
         )
 
