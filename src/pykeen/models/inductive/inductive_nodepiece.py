@@ -18,6 +18,7 @@ from ...nn import (
     representation_resolver,
 )
 from ...nn.node_piece import RelationTokenizer
+from ...nn.init import xavier_uniform_
 from ...triples.triples_factory import CoreTriplesFactory
 
 __all__ = [
@@ -58,6 +59,7 @@ class InductiveNodePiece(InductiveERModel):
         aggregation: Hint[Callable[[torch.Tensor, int], torch.Tensor]] = None,
         validation_factory: Optional[CoreTriplesFactory] = None,
         test_factory: Optional[CoreTriplesFactory] = None,
+        initilizer=xavier_uniform_,
         **kwargs,
     ) -> None:
         """
@@ -126,6 +128,8 @@ class InductiveNodePiece(InductiveERModel):
                 token_representations=relation_representations,
                 aggregation=aggregation,
                 num_tokens=num_tokens,
+                # Modification here
+                entity_initializer=initilizer
             ),
             relation_representations=SubsetRepresentation(  # hide padding relation
                 max_id=triples_factory.num_relations,
