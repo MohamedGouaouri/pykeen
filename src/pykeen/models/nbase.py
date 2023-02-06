@@ -98,7 +98,8 @@ class _NewAbstractModel(Model, ABC):
         # This ensures that specialized initializations will take priority over the default ones of its components.
         for module in map(itemgetter(1), sorted(task_list, reverse=True, key=itemgetter(0))):
             module.reset_parameters()
-            uninitialized_parameters.difference_update(map(id, module.parameters()))
+            uninitialized_parameters.difference_update(
+                map(id, module.parameters()))
 
         # emit warning if there where parameters which were not initialised by reset_parameters.
         if len(uninitialized_parameters) > 0:
@@ -110,7 +111,8 @@ class _NewAbstractModel(Model, ABC):
 
             # Additional debug information
             for i, p_id in enumerate(uninitialized_parameters, start=1):
-                logger.debug("[%3d] Parents to blame: %s", i, parents.get(p_id))
+                logger.debug("[%3d] Parents to blame: %s",
+                             i, parents.get(p_id))
 
     def _instantiate_regularizer(
         self,
@@ -196,8 +198,9 @@ def _prepare_representation_module_list(
     """
     # TODO: allow max_id being present in representation_kwargs; if it matches max_id
     # TODO: we could infer some shapes from the given interaction shape information
-    rs = representation_resolver.make_many(representations, kwargs=representations_kwargs, max_id=max_id)
-
+    rs = representation_resolver.make_many(
+        representations, kwargs=representations_kwargs, max_id=max_id)
+    print("RS", rs)
     # check max-id
     for r in rs:
         if r.max_id < max_id:
@@ -327,7 +330,8 @@ class ERModel(
         # pass a dictionary with keys "entity"/"relation";
         # values are either a regularizer hint (=the same regularizer for all repr); or a sequence of appropriate length
         super().__init__(triples_factory=triples_factory, **kwargs)
-        self.interaction = interaction_resolver.make(interaction, pos_kwargs=interaction_kwargs)
+        self.interaction = interaction_resolver.make(
+            interaction, pos_kwargs=interaction_kwargs)
         self.entity_representations = self._build_representations(
             triples_factory=triples_factory,
             representations=entity_representations,
@@ -361,7 +365,8 @@ class ERModel(
             representations=representations,
             representations_kwargs=representations_kwargs,
             max_id=triples_factory.num_entities if label == "entity" else triples_factory.num_relations,
-            shapes=self.interaction.full_entity_shapes() if label == "entity" else self.interaction.relation_shape,
+            shapes=self.interaction.full_entity_shapes(
+            ) if label == "entity" else self.interaction.relation_shape,
             label=label,
             **kwargs,
         )
@@ -408,7 +413,8 @@ class ERModel(
         for param in parameter:
             if isinstance(param, str):
                 if param not in weights:
-                    raise KeyError(f"Invalid parameter_name={parameter}. Available are: {sorted(weights.keys())}.")
+                    raise KeyError(
+                        f"Invalid parameter_name={parameter}. Available are: {sorted(weights.keys())}.")
                 param: nn.Parameter = weights[param]  # type: ignore
             regularizer.add_parameter(parameter=param)
         self.weight_regularizers.append(regularizer)
@@ -449,8 +455,10 @@ class ERModel(
             if score repetition becomes necessary
         """
         if not self.entity_representations or not self.relation_representations:
-            raise NotImplementedError("repeat scores not implemented for general case.")
-        h, r, t = self._get_representations(h=h_indices, r=r_indices, t=t_indices, mode=mode)
+            raise NotImplementedError(
+                "repeat scores not implemented for general case.")
+        h, r, t = self._get_representations(
+            h=h_indices, r=r_indices, t=t_indices, mode=mode)
         return self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=slice_dim)
 
     def score_hrt(self, hrt_batch: torch.LongTensor, *, mode: Optional[InductiveMode] = None) -> torch.FloatTensor:
@@ -471,7 +479,8 @@ class ERModel(
         # dimension, and slicing along this dimension is already considered by sub-batching.
         # Note: we do not delegate to the general method for performance reasons
         # Note: repetition is not necessary here
-        h, r, t = self._get_representations(h=hrt_batch[:, 0], r=hrt_batch[:, 1], t=hrt_batch[:, 2], mode=mode)
+        h, r, t = self._get_representations(
+            h=hrt_batch[:, 0], r=hrt_batch[:, 1], t=hrt_batch[:, 2], mode=mode)
         return self.interaction.score_hrt(h=h, r=r, t=t)
 
     def _check_slicing(self, slice_size: Optional[int]) -> None:
@@ -479,7 +488,8 @@ class ERModel(
         if not slice_size:
             return
         if get_batchnorm_modules(self):  # if there are any, this is truthy
-            raise ValueError("This model does not support slicing, since it has batch normalization layers.")
+            raise ValueError(
+                "This model does not support slicing, since it has batch normalization layers.")
 
     # docstr-coverage: inherited
     def score_t(
@@ -493,14 +503,17 @@ class ERModel(
         self._check_slicing(slice_size=slice_size)
         # add broadcast dimension
         hr_batch = hr_batch.unsqueeze(dim=1)
-        h, r, t = self._get_representations(h=hr_batch[..., 0], r=hr_batch[..., 1], t=tails, mode=mode)
+        h, r, t = self._get_representations(
+            h=hr_batch[..., 0], r=hr_batch[..., 1], t=tails, mode=mode)
         # unsqueeze if necessary
         if tails is None or tails.ndimension() == 1:
             t = parallel_unsqueeze(t, dim=0)
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
+            scores=self.interaction.score(
+                h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
             representations=self.entity_representations,
-            num=self._get_entity_len(mode=mode) if tails is None else tails.shape[-1],
+            num=self._get_entity_len(
+                mode=mode) if tails is None else tails.shape[-1],
         )
 
     # docstr-coverage: inherited
@@ -515,14 +528,17 @@ class ERModel(
         self._check_slicing(slice_size=slice_size)
         # add broadcast dimension
         rt_batch = rt_batch.unsqueeze(dim=1)
-        h, r, t = self._get_representations(h=heads, r=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode)
+        h, r, t = self._get_representations(
+            h=heads, r=rt_batch[..., 0], t=rt_batch[..., 1], mode=mode)
         # unsqueeze if necessary
         if heads is None or heads.ndimension() == 1:
             h = parallel_unsqueeze(h, dim=0)
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
+            scores=self.interaction.score(
+                h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
             representations=self.entity_representations,
-            num=self._get_entity_len(mode=mode) if heads is None else heads.shape[-1],
+            num=self._get_entity_len(
+                mode=mode) if heads is None else heads.shape[-1],
         )
 
     # docstr-coverage: inherited
@@ -537,12 +553,14 @@ class ERModel(
         self._check_slicing(slice_size=slice_size)
         # add broadcast dimension
         ht_batch = ht_batch.unsqueeze(dim=1)
-        h, r, t = self._get_representations(h=ht_batch[..., 0], r=relations, t=ht_batch[..., 1], mode=mode)
+        h, r, t = self._get_representations(
+            h=ht_batch[..., 0], r=relations, t=ht_batch[..., 1], mode=mode)
         # unsqueeze if necessary
         if relations is None or relations.ndimension() == 1:
             r = parallel_unsqueeze(r, dim=0)
         return repeat_if_necessary(
-            scores=self.interaction.score(h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
+            scores=self.interaction.score(
+                h=h, r=r, t=t, slice_size=slice_size, slice_dim=1),
             representations=self.relation_representations,
             num=self.num_relations if relations is None else relations.shape[-1],
         )
@@ -564,7 +582,8 @@ class ERModel(
             the entity representations for the given inductive mode
         """
         if mode is not None:
-            raise ValueError(f"{self.__class__.__name__} does not support inductive mode: {mode}")
+            raise ValueError(
+                f"{self.__class__.__name__} does not support inductive mode: {mode}")
         return self.entity_representations
 
     def _get_entity_len(self, *, mode: Optional[InductiveMode]) -> Optional[int]:  # noqa:D105
@@ -594,11 +613,15 @@ class ERModel(
         mode: Optional[InductiveMode],
     ) -> Tuple[HeadRepresentation, RelationRepresentation, TailRepresentation]:
         """Get representations for head, relation and tails."""
-        head_representations = tail_representations = self._get_entity_representations_from_inductive_mode(mode=mode)
-        head_representations = [head_representations[i] for i in self.interaction.head_indices()]
-        tail_representations = [tail_representations[i] for i in self.interaction.tail_indices()]
+        head_representations = tail_representations = self._get_entity_representations_from_inductive_mode(
+            mode=mode)
+        head_representations = [head_representations[i]
+                                for i in self.interaction.head_indices()]
+        tail_representations = [tail_representations[i]
+                                for i in self.interaction.tail_indices()]
         hr, rr, tr = [
-            [representation(indices=indices) for representation in representations]
+            [representation(indices=indices)
+             for representation in representations]
             for indices, representations in (
                 (h, head_representations),
                 (r, self.relation_representations),
