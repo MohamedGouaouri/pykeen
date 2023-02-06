@@ -275,6 +275,7 @@ class NodePieceRepresentation(CombinedRepresentation):
             mapped_triples = mapped_triples[mapped_triples[:, 1]
                                             < triples_factory.real_num_relations]
 
+        print("TOKEN REPRESENTATION IN NODE PIECE", token_representations)
         token_representations, token_representations_kwargs, num_tokens = broadcast_upgrade_to_sequences(
             token_representations, token_representations_kwargs, num_tokens
         )
