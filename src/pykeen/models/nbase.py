@@ -201,7 +201,7 @@ def _prepare_representation_module_list(
     print("KWARGS in _prepare_representation_module_list: ", representations_kwargs)
     print("REPRESENTATION in _prepare_representation_module_list: ", representations)
     print("INSPECTING EMBEDDING BEFORE: \n",
-          representations_kwargs['token_representations'][0]
+          dir(representations_kwargs['token_representations'])
           )
     rs = representation_resolver.make_many(
         representations, kwargs=representations_kwargs, max_id=max_id)
