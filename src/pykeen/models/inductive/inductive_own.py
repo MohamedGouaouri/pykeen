@@ -14,6 +14,7 @@ from ...nn import (
     DistMultInteraction,
     Interaction,
     representation_resolver,
+    SubsetRepresentation
 )
 
 from ...nn.init import xavier_uniform_, xavier_normal_norm_
@@ -101,9 +102,13 @@ class InductiveOwn(InductiveERModel):
                 token_representations=er,
                 initializer=entity_initializer
             ),
-            relation_representations_kwargs=dict(
-                shape=embedding_dim,
-                initializer=relation_initializer,
+            # relation_representations_kwargs=dict(
+            #     shape=embedding_dim,
+            #     initializer=relation_initializer,
+            # ),
+            relation_representations=SubsetRepresentation(  # hide padding relation
+                max_id=triples_factory.num_relations,
+                base=er,
             ),
             validation_factory=validation_factory,
             testing_factory=test_factory,
