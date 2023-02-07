@@ -200,6 +200,9 @@ def _prepare_representation_module_list(
     # TODO: we could infer some shapes from the given interaction shape information
     print("KWARGS in _prepare_representation_module_list: ", representations_kwargs)
     print("REPRESENTATION in _prepare_representation_module_list: ", representations)
+    print("INSPECTING EMBEDDING BEFORE: \n",
+          representations_kwargs['token_representations'][0]
+          )
     rs = representation_resolver.make_many(
         representations, kwargs=representations_kwargs, max_id=max_id)
     print("RS in _prepare_representation_module_list: ", rs)
