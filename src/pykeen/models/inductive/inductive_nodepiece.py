@@ -111,10 +111,13 @@ class InductiveNodePiece(InductiveERModel):
 
         # always create representations for normal and inverse relations and padding
         relation_representations = representation_resolver.make(
+            # Make Embedding object
             query=None,
             pos_kwargs=relation_representations_kwargs,
             max_id=2 * triples_factory.real_num_relations + 1,
             shape=embedding_dim,
+            # This might thow dimension exception
+            initializer=entity_initializer
         )
         if validation_factory is None:
             validation_factory = inference_factory
