@@ -97,7 +97,7 @@ class InductiveOwn(InductiveERModel):
             entity_representations=NodePieceRepresentation,
             entity_representations_kwargs=dict(
                 shape=embedding_dim,
-                # triples_factory=triples_factory,
+                triples_factory=triples_factory,
                 # Modification here
                 token_representations=er,
                 initializer=entity_initializer
